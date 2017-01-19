@@ -54,4 +54,27 @@ if [ -n "${LOCAL_NETWORK-}" ]; then
   fi
 fi
 
-exec openvpn $TRANSMISSION_CONTROL_OPTS $OPENVPN_OPTS --config "$OPENVPN_CONFIG"
+#COUCHPOTATO_CONTROL_OPTS="--script-security 2 --up /etc/couchpotato/start.sh --down /etc/couchpotato/stop.sh"
+#COUCHPOTATO_CONTROL_OPTS="--script-security 2 --up /etc/couchpotato/start.sh"
+
+#if [ -n "${LOCAL_NETWORK-}" ]; then
+#  eval $(/sbin/ip r l m 0.0.0.0 | awk '{if($5!="tun0"){print "GW="$3"\nINT="$5; exit}}')
+#  if [ -n "${GW-}" -a -n "${INT-}" ]; then
+#    echo "adding route to local network $LOCAL_NETWORK via $GW dev $INT"
+#    /sbin/ip r a "$LOCAL_NETWORK" via "$GW" dev "$INT"
+#  fi
+#fi
+
+#COST_CONTROL_OPTS="--script-security 2 --up /etc/sickrage/start.sh"
+
+#if [ -n "${LOCAL_NETWORK-}" ]; then
+#  eval $(/sbin/ip r l m 0.0.0.0 | awk '{if($5!="tun0"){print "GW="$3"\nINT="$5; exit}}')
+#  if [ -n "${GW-}" -a -n "${INT-}" ]; then
+#    echo "adding route to local network $LOCAL_NETWORK via $GW dev $INT"
+#    /sbin/ip r a "$LOCAL_NETWORK" via "$GW" dev "$INT"
+#  fi
+#fi
+
+#exec openvpn $COUCHPOTATO_CONTROL_OPTS $OPENVPN_OPTS --config "$OPENVPN_CONFIG" &&
+exec openvpn $TRANSMISSION_CONTROL_OPTS $OPENVPN_OPTS --config "$OPENVPN_CONFIG" 
+#exec openvpn $COUCHPOTATO_CONTROL_OPTS $OPENVPN_OPTS --config "$OPENVPN_CONFIG"

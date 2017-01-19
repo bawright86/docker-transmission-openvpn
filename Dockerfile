@@ -1,9 +1,9 @@
-# Transmission and OpenVPN
-#
-# Version 1.14
+# Transmission, OpenVPN, Sickrage and CouchPotato
+# Hacked together from the Transmission-OpenVPN docker image provided by Kristian Haugene - https://github.com/haugene
+# and the SickRage and CouchPotato images provided by http://linuxserver.io
+# Version 0.1
 
-FROM ubuntu:14.04
-MAINTAINER Kristian Haugene
+FROM debian:latest
 
 VOLUME /data
 VOLUME /config
@@ -11,16 +11,20 @@ VOLUME /config
 # Update packages and install software
 RUN apt-get update \
     && apt-get -y install software-properties-common \
-    && add-apt-repository multiverse \
-    && add-apt-repository ppa:transmissionbt/ppa \
-    && apt-get update \
+#    && add-apt-repository multiverse \
+#    && add-apt-repository ppa:transmissionbt/ppa \
+#    && apt-get update \
     && apt-get install -y transmission-cli transmission-common transmission-daemon \
-    && apt-get install -y openvpn curl rar unrar zip unzip wget \
+    && apt-get install -y openvpn curl unrar-free zip unzip wget \
+    && apt-get install -y python-pip python-dev git-core \
     && curl -sLO https://github.com/Yelp/dumb-init/releases/download/v1.0.1/dumb-init_1.0.1_amd64.deb \
     && dpkg -i dumb-init_*.deb \
     && rm -rf dumb-init_*.deb \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && curl -L https://github.com/jwilder/dockerize/releases/download/v0.0.2/dockerize-linux-amd64-v0.0.2.tar.gz | tar -C /usr/local/bin -xzv \
+    && pip install pyopenssl \
+    && git clone https://github.com/CouchPotato/CouchPotatoServer /opt/CouchPotatoServer \
+    && git clone https://github.com/SickRage/SickRage /opt/SickRage \
     && groupmod -g 1000 users \
     && useradd -u 911 -U -d /config -s /bin/false abc \
     && usermod -G users abc
@@ -102,10 +106,27 @@ ENV OPENVPN_USERNAME=**None** \
     "TRANSMISSION_UTP_ENABLED=true" \
     "TRANSMISSION_WATCH_DIR=/data/watch" \
     "TRANSMISSION_WATCH_DIR_ENABLED=true" \
-    "TRANSMISSION_HOME=/data/transmission-home" \
-    PUID=\
-    PGID=
+    "TRANSMISSION_HOME=/data/.config/transmission" \
+    "PUID=" \
+    "PGID="
+
+ADD couchpotato/start.sh /etc/couchpotato/start.sh
+RUN useradd -c "CouchPotato User" couchpotato && \
+    mkdir -p /data/.config/couchpotato && \
+    chmod u=rwx /etc/couchpotato/start.sh && \
+    chown -R couchpotato:couchpotato /opt/CouchPotatoServer /data/.config/couchpotato /etc/couchpotato/start.sh
+#VOLUME ["/data/couchpotato"]
+
+ADD sickrage/start.sh /etc/sickrage/start.sh
+RUN useradd -c "SickRage User" sickrage && \
+    mkdir -p /data/.config/sickrage && \
+    chmod u=rwx /etc/sickrage/start.sh && \
+    chown -R sickrage:sickrage /opt/SickRage /data/.config/sickrage /etc/sickrage/start.sh
+#VOLUME ["/data/sickrage"]
 
 # Expose port and run
+EXPOSE 5050
+EXPOSE 8081
 EXPOSE 9091
+VOLUME /config /data /downloads /tv /movies
 CMD ["dumb-init", "/etc/openvpn/start.sh"]

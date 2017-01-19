@@ -22,7 +22,8 @@ fi
 . /etc/transmission/userSetup.sh
 
 echo "STARTING TRANSMISSION"
-exec sudo -u ${RUN_AS} /usr/bin/transmission-daemon -g ${TRANSMISSION_HOME} --logfile ${TRANSMISSION_HOME}/transmission.log &
+#exec sudo -u ${RUN_AS} /usr/bin/transmission-daemon -g ${TRANSMISSION_HOME} --logfile ${TRANSMISSION_HOME}/transmission.log &
+exec /usr/bin/transmission-daemon -g ${TRANSMISSION_HOME} --logfile ${TRANSMISSION_HOME}/transmission.log &
 
 if [ "$OPENVPN_PROVIDER" = "PIA" ]
 then
@@ -33,3 +34,32 @@ else
 fi
 
 echo "Transmission startup script complete."
+
+# if the /data/couchpotato directory doesn't contain anything, then start CouchPotatoServer, stop it,
+# and update the settings so that the wizard doesn't run (which in the current version seems buggy).
+directory="/data/couchpotato"
+if [ ! "$(ls -A $directory)" ]; then
+    /usr/bin/python2.7 /opt/CouchPotatoServer/CouchPotato.py --data_dir=/data/.config/couchpotato --console_log & \
+    sleep 10
+    kill $(pidof python2.7)
+    sleep 3
+    #sed -i "s/show_wizard = 1/show_wizard = 0/" /data/couchpotato/settings.conf 
+    /usr/bin/python2.7 /opt/CouchPotatoServer/CouchPotato.py --data_dir=/data/.config/couchpotato --console_log &
+else
+    /usr/bin/python2.7 /opt/CouchPotatoServer/CouchPotato.py --data_dir=/data/.config/couchpotato --console_log &
+fi
+
+echo "CouchPotato startup script complete."
+# if the /data/couchpotato directory doesn't contain anything, then start CouchPotatoServer, stop it,
+# and update the settings so that the wizard doesn't run (which in the current version seems buggy).
+directory="/data/sickrage"
+if [ ! "$(ls -A $directory)" ]; then
+    /usr/bin/python2.7 /opt/SickRage/SickBeard.py --datadir=/data/.config/sickrage & \
+    sleep 10
+    kill $(pidof python2.7)
+    sleep 3
+#    sed -i "s/show_wizard = 1/show_wizard = 0/" /data/couchpotato/settings.conf
+    /usr/bin/python2.7 /opt/SickRage/SickBeard.py --datadir=/data/.config/sickrage &
+else
+    /usr/bin/python2.7 /opt/SickRage/SickBeard.py --datadir=/data/.config/sickrage &
+fi
